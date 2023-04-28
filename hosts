@@ -1,0 +1,5 @@
+[servers]
+srvubunt1 ansible_host=192.168.225.136 ansible_user=admin1 ansible_become=yes ansible_become_method=su ansible_password=admin1
+
+[all:vars]
+ansible_python_interpreter=/usr/bin/python3

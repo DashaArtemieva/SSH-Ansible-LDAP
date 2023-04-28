@@ -1,0 +1,53 @@
+---
+- hosts: all
+  become: yes
+
+  tasks:
+    - name: Установка OpenLDAP сервера
+      apt:
+        name: slapd ldap-utils
+        state: present
+      become: yes
+
+    - name: Установка пароля администратора в LDAP
+      ldap_attr:
+        dn: cn=admin,{{ ldap_base_dn }}
+        name: userPassword
+        value: "{{ ldap_admin_password }}"
+        state: present
+        attributes: ['userPassword']
+
+    - name: Установка domain и organization в LDAP
+      ldap_entry:
+        dn: dc={{ ldap_domain }},{{ ldap_base_dn }}
+        objectClass: ['top', 'dcObject', 'organization']
+        attributes:
+          o: "{{ ldap_organization }}"
+        state: present
+
+    - name: Добавление пользователей в LDAP
+      ldap_entry:
+        dn: uid={{ item.username }},ou=people,{{ ldap_base_dn }}
+        objectClass: ['top', 'person', 'organizationalPerson', 'inetOrgPerson']
+        attributes:
+          cn: "{{ item.full_name }}"
+          sn: "{{ item.last_name }}"
+          givenName: "{{ item.first_name }}"
+          mail: "{{ item.email }}"
+          userPassword: "{{ item.password }}"
+        state: present
+      loop:
+        - { username: 'user1', full_name: 'User One', last_name: 'One', first_name: 'User', email: 'user1@example.com', password: 'password1' }
+        - { username: 'user2', full_name: 'User Two', last_name: 'Two', first_name: 'User', email: 'user2@example.com', password: 'password2' }
+
+    - name: Добавление групп в LDAP
+      ldap_entry:
+        dn: cn={{ item.group_name }},ou=groups,{{ ldap_base_dn }}
+        objectClass: ['top', 'groupOfNames']
+        attributes:
+          member: "uid=user1,ou=people,{{ ldap_base_dn }}"
+          member: "uid=user2,ou=people,{{ ldap_base_dn }}"
+        state: present
+      loop:
+        - { group_name: 'group1' }
+        - { group_name: 'group2' }
