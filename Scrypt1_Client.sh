@@ -1,5 +1,11 @@
 #!/bin/bash
 
+# Добавление пользователя Sudoers
+sudo echo 'admin1  ALL=(ALL:ALL) ALL' >> /etc/sudoers
+
+# Установка Ansible Core
+sudo apt install ansible-core
+
 # Установка OpenSSH сервера
 sudo apt-get update
 sudo apt-get install openssh-server

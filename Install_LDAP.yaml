@@ -1,19 +1,43 @@
 ---
 - hosts: all
   become: yes
-
+  
   tasks:
+        
+    - name: Установка зависимостей
+      apt: 
+        package: name="{{item}}"
+      become: yes
+      with_items:
+      - "python-pip"
+      - "libsasl2-dev"
+      - "libldap2-dev"
+      - "libssl-dev"
+
+    - name: Upgrade pip
+      command: pip install --upgrade pip
+
+    - name: Install python-ldap
+      pip: name=python-ldap state=present  
+    
     - name: Установка OpenLDAP сервера
       apt:
-        name: slapd ldap-utils
-        state: present
+        package: name="{{ lookup('vars', 'packages_' + ansible_os_family) }}"
+      become: yes
+      
+    - name: Включение сервиса LDAP
+      systemd:
+        name: slapd.service
+        state: started
+        enabled: yes
       become: yes
 
+
     - name: Установка пароля администратора в LDAP
-      ldap_attr:
+        ldap_attr:
         dn: cn=admin,{{ ldap_base_dn }}
-        name: userPassword
-        value: "{{ ldap_admin_password }}"
+          name: userPassword
+          value: "{{ ldap_admin_password }}"
         state: present
         attributes: ['userPassword']
 
